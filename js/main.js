@@ -121,12 +121,38 @@ if (siteHeader) {
   });
 })();
 
-// ===== Contact form (static site) =====
-const contactForm = document.getElementById("contactForm");
-if (contactForm) {
-  contactForm.addEventListener("submit", (e) => {
+// ===== Form submissions via Web3Forms =====
+function handleWeb3Form(form, successId) {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    document.getElementById("contact-success")?.classList.remove("hidden");
-    contactForm.reset();
+    const btn = form.querySelector('button[type="submit"]');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: new FormData(form),
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById(successId)?.classList.remove("hidden");
+        form.reset();
+      } else {
+        alert("Something went wrong. Please try calling us instead.");
+      }
+    } catch {
+      alert("Network error. Please try calling us instead.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
   });
 }
+
+const quoteForm = document.getElementById("quoteForm");
+if (quoteForm) handleWeb3Form(quoteForm, "quote-success");
+
+const contactForm = document.getElementById("contactForm");
+if (contactForm) handleWeb3Form(contactForm, "contact-success");
