@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>About Us | Executive Travel Wales</title>
+  <meta name="description" content="Over 20 years of reliable taxis, airport transfers and executive travel across South Wales. Meet Evan and the team behind Executive Travel Wales." />
+  <meta name="theme-color" content="#0a0e1a" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== DESIGN TOKENS ===== */
+    :root {
+      --bg: #f8f8f6;
+      --bg-warm: #f3f1ec;
+      --ink: #0a0e1a;
+      --ink-soft: #2d3348;
+      --muted: #6b7280;
+      --line: rgba(15,23,42,.08);
+      --card: #ffffff;
+      --radius: 20px;
+      --radius-sm: 14px;
+      --shadow: 0 24px 64px rgba(2,6,23,.10);
+      --shadow-soft: 0 8px 32px rgba(2,6,23,.06);
+      --shadow-hover: 0 32px 80px rgba(2,6,23,.14);
+      --brand: #0a0e1a;
+      --gold: #c9a84c;
+      --gold-light: #e8d48b;
+      --gold-dark: #9a7b2e;
+      --gold-glow: rgba(201,168,76,.15);
+      --gold-gradient: linear-gradient(135deg, #e8d48b 0%, #c9a84c 35%, #9a7b2e 70%, #c9a84c 100%);
+      --transition: cubic-bezier(.22,1,.36,1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    img { max-width: 100%; display: block; height: auto; }
+    a { color: inherit; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container { max-width: 1200px; margin-inline: auto; padding: 0 24px; }
+    .muted { color: var(--muted); }
+
+    /* ===== SCROLL REVEAL ===== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity .8s var(--transition), transform .8s var(--transition);
+    }
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: .15s; }
+    .reveal-delay-2 { transition-delay: .3s; }
+
+    /* ===== GOLD DIVIDER ===== */
+    .gold-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 12px 0 20px;
+    }
+    .gold-divider::before,
+    .gold-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: .35;
+    }
+    .gold-divider span {
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(248,248,246,.88);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--line);
+      transition: background .3s ease, box-shadow .3s ease;
+    }
+    header.scrolled {
+      background: rgba(248,248,246,.96);
+      box-shadow: 0 4px 30px rgba(0,0,0,.06);
+    }
+
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .brand:hover { text-decoration: none; }
+    .brand img { height: 48px; width: auto; border-radius: 6px; }
+    .brand-name {
+      font-family: "Great Vibes", cursive;
+      font-size: 28px;
+      font-weight: 400;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      padding: 0 20px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-weight: 650;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all .3s var(--transition);
+      white-space: nowrap;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: .02em;
+    }
+    .btn:hover { text-decoration: none; }
+
+    .btn-outline {
+      background: rgba(255,255,255,.95);
+      border-color: rgba(15,23,42,.12);
+      color: var(--ink);
+      box-shadow: 0 4px 16px rgba(2,6,23,.04);
+    }
+    .btn-outline:hover {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+      box-shadow: 0 12px 32px rgba(201,168,76,.1);
+      color: var(--gold-dark);
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #1a1f2e, #0a0e1a);
+      color: #fff;
+      box-shadow: 0 12px 36px rgba(2,6,23,.20);
+      border: 1px solid rgba(201,168,76,.2);
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(201,168,76,.15) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform .5s ease;
+    }
+    .btn-primary:hover::before { transform: translateX(100%); }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 50px rgba(2,6,23,.28);
+      border-color: rgba(201,168,76,.4);
+    }
+
+    .btn-gold {
+      background: transparent;
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+    }
+    .btn-gold:hover {
+      background: var(--gold);
+      color: #0a0e1a;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(201,168,76,.25);
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      position: relative;
+      isolation: isolate;
+      color: #fff;
+      background: linear-gradient(180deg, #0a0e1a 0%, #131829 100%);
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(900px 320px at 50% -80px, rgba(201,168,76,.12), transparent 50%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gold-gradient);
+      z-index: 2;
+    }
+
+    .hero .inner {
+      position: relative;
+      z-index: 1;
+      padding: 90px 0 70px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      margin-bottom: 20px;
+      padding: 8px 20px;
+      border: 1px solid rgba(201,168,76,.25);
+      border-radius: 999px;
+      background: rgba(201,168,76,.08);
+    }
+    .hero-eyebrow svg { width: 14px; height: 14px; }
+
+    .gold-heading {
+      font-size: clamp(36px, 6vw, 60px);
+      line-height: 1.1;
+      margin: 0 0 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-family: "Playfair Display", serif;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      max-width: 640px;
+      margin: 0 auto;
+      color: rgba(255,255,255,.7);
+      font-size: 17px;
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    /* ===== ABOUT CONTENT ===== */
+    .about { padding: 80px 0; }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 56px;
+      align-items: center;
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .section-label::before {
+      content: '';
+      width: 24px;
+      height: 2px;
+      background: var(--gold);
+      border-radius: 2px;
+    }
+
+    .about h2 {
+      font-size: clamp(28px, 3.5vw, 40px);
+      margin: 0 0 8px;
+      font-family: "Playfair Display", serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .about p {
+      font-size: 15.5px;
+      color: var(--muted);
+      line-height: 1.8;
+      margin-top: 16px;
+    }
+    .about p:first-of-type { margin-top: 20px; }
+    .about p strong { color: var(--ink); }
+
+    .points {
+      margin-top: 24px;
+      padding: 0;
+      list-style: none;
+    }
+    .points li {
+      margin: 12px 0;
+      padding-left: 28px;
+      position: relative;
+      font-size: 15px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+    .points li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 9px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    .portrait {
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      background: #000;
+      position: relative;
+    }
+    .portrait::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      border: 1px solid rgba(201,168,76,.15);
+      pointer-events: none;
+    }
+    .portrait img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      transition: transform .6s var(--transition);
+    }
+    .portrait:hover img {
+      transform: scale(1.03);
+    }
+
+    /* ===== STATS BAR ===== */
+    .stats {
+      background: var(--ink);
+      padding: 48px 0;
+      position: relative;
+    }
+    .stats::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gold-gradient);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: "Playfair Display", serif;
+      font-size: clamp(36px, 4vw, 52px);
+      font-weight: 700;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: rgba(255,255,255,.6);
+      font-weight: 500;
+      letter-spacing: .02em;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: linear-gradient(180deg, #0a0e1a, #060912);
+      color: rgba(255,255,255,.7);
+      position: relative;
+    }
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gold-gradient);
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 40px;
+      padding: 56px 0 40px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+
+    footer h3 {
+      color: #fff;
+      margin: 0 0 16px;
+      font-family: "Playfair Display", serif;
+      font-size: 22px;
+    }
+    footer h4 {
+      color: var(--gold);
+      margin: 0 0 16px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    footer p { line-height: 1.7; font-size: 14.5px; }
+    footer a {
+      color: rgba(255,255,255,.65);
+      text-decoration: none;
+      transition: color .2s ease;
+    }
+    footer a:hover { color: var(--gold); text-decoration: none; }
+    footer ul { list-style: none; padding: 0; margin: 0; }
+    footer li { margin: 10px 0; font-size: 14.5px; }
+
+    .footer-bottom {
+      padding: 24px 0;
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255,255,255,.4);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .about-grid { grid-template-columns: 1fr; gap: 36px; }
+      .stats-grid { grid-template-columns: 1fr; gap: 24px; }
+      .footer-top { grid-template-columns: 1fr; }
+      .actions { justify-content: center; }
+      .nav-row { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 600px) {
+      .brand-name { font-size: 22px; }
+      .footer-bottom { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav-row">
+      <a class="brand" href="index.html">
+        <img src="assets/logo.jpg" alt="Executive Travel Wales logo" />
+        <span class="brand-name">Executive Travel Wales</span>
+      </a>
+      <div class="actions">
+        <a class="btn btn-outline" href="index.html">Home</a>
+        <a class="btn btn-outline" href="terms.html">Terms</a>
+        <a class="btn btn-gold" href="privacy.html">Privacy</a>
+        <a class="btn btn-primary" href="tel:07312000444">
+          <svg style="width:15px;height:15px;margin-right:8px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          07312 000 444
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container inner">
+      <div class="hero-eyebrow">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Our Story
+      </div>
+      <h1 class="gold-heading">About Us</h1>
+      <p>Over 20 years of reliable taxis, airport transfers and executive travel across South Wales.</p>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="container stats-grid">
+      <div class="reveal">
+        <div class="stat-number">20+</div>
+        <div class="stat-label">Years of Experience</div>
+      </div>
+      <div class="reveal reveal-delay-1">
+        <div class="stat-number">10k+</div>
+        <div class="stat-label">Journeys Completed</div>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">DBS-Checked Drivers</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About content -->
+  <section class="about">
+    <div class="container about-grid">
+      <div class="about-text reveal">
+        <div class="section-label">Our Heritage</div>
+        <h2>Over 20 Years of Trusted Travel</h2>
+        <div class="gold-divider"><span>Experience &middot; Reliability &middot; Trust</span></div>
+
+        <p>
+          At <strong>Evans Taxis &amp; Executive Travel Wales</strong>, reliability comes first.
+          Founder <strong>Evan</strong> brings more than <strong>20 years of experience</strong> in the taxi and private hire industry, building a service recognised for professionalism, safety and trust across South Wales.
+        </p>
+
+        <p>
+          Our <strong>DBS-checked drivers</strong> operate a modern fleet — from local taxis to executive Mercedes vehicles and minibuses — ensuring every journey is comfortable and secure.
+        </p>
+
+        <p>
+          Whether you're booking a <strong>24/7 local taxi</strong>, an <strong>airport transfer</strong>, or a tailored <strong>chauffeur experience</strong>, we guarantee punctuality and peace of mind. You'll also benefit from <strong>card payments</strong>, advance bookings and <strong>live tracking on request</strong>.
+        </p>
+
+        <ul class="points">
+          <li>Based in South Wales, covering Merthyr Tydfil, Cardiff, Newport &amp; the Valleys</li>
+          <li>Corporate accounts available with monthly invoicing</li>
+          <li>Fixed-price airport transfers to all major UK airports</li>
+          <li>Child seats &amp; accessibility options available on request</li>
+        </ul>
+      </div>
+
+      <div class="about-image reveal reveal-delay-2">
+        <figure class="portrait">
+          <img src="assets/about-evan-portrait.jpg" alt="Evan — Founder of Evans Taxis & Executive Travel Wales">
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-top">
+        <div>
+          <h3>Executive Travel Wales</h3>
+          <p>Reliable taxis &amp; premium executive travel across South Wales. Professional, insured and DBS-checked drivers.</p>
+        </div>
+        <div>
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <p>Merthyr Tydfil, South Wales<br>
+            Phone: <a href="tel:07312000444">07312 000 444</a><br>
+            Email: <a href="mailto:evantaxiservice@gmail.com">evantaxiservice@gmail.com</a></p>
+        </div>
+      </div>
+      <div class="footer-bottom">&copy; <span id="y"></span> Executive Travel Wales. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    // Year
+    const y = document.getElementById('y');
+    if (y) y.textContent = new Date().getFullYear();
+
+    // Header scroll effect
+    const header = document.querySelector('header');
+    if (header) {
+      window.addEventListener('scroll', () => {
+        header.classList.toggle('scrolled', window.scrollY > 20);
+      }, { passive: true });
+    }
+
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    if (reveals.length && 'IntersectionObserver' in window) {
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('is-visible');
+            obs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+      reveals.forEach(el => obs.observe(el));
+    } else {
+      reveals.forEach(el => el.classList.add('is-visible'));
+    }
+  </script>
+</body>
+</html>
