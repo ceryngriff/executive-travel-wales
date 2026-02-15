@@ -32,8 +32,8 @@
 
 # Redirect www to non-www (or vice versa - adjust as needed)
 # RewriteEngine On
-# RewriteCond %{HTTP_HOST} ^www\.executivetravelwales\.co\.uk$ [NC]
-# RewriteRule ^(.*)$ https://executivetravelwales.co.uk/$1 [L,R=301]
+# RewriteCond %{HTTP_HOST} ^www\.executivetravel\.wales$ [NC]
+# RewriteRule ^(.*)$ https://executivetravel.wales/$1 [L,R=301]
 
 # Remove index.html from URLs
 <IfModule mod_rewrite.c>
