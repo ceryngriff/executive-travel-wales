@@ -25,20 +25,18 @@
   FileETag None
 </IfModule>
 
-# Redirect HTTP to HTTPS (uncomment if you have SSL)
-# RewriteEngine On
-# RewriteCond %{HTTPS} off
-# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-
-# Redirect www to non-www (or vice versa - adjust as needed)
-# RewriteEngine On
-# RewriteCond %{HTTP_HOST} ^www\.executivetravel\.wales$ [NC]
-# RewriteRule ^(.*)$ https://executivetravel.wales/$1 [L,R=301]
-
-# Remove index.html from URLs
+# Remove index.html from URLs + enforce HTTPS and non-www
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Redirect HTTP to HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Redirect www to non-www
+  RewriteCond %{HTTP_HOST} ^www\.executivetravel\.wales$ [NC]
+  RewriteRule ^(.*)$ https://executivetravel.wales/$1 [L,R=301]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^index\.html$ - [L]
@@ -56,7 +54,7 @@
 
 # Prevent hotlinking of images
 <FilesMatch "\.(jpg|jpeg|png|gif)$">
-  SetEnvIf Referer "^https?://([^/]+\.)?executivetravelwales\.co\.uk" local_ref=1
+  SetEnvIf Referer "^https?://([^/]+\.)?executivetravel\.wales" local_ref=1
   SetEnvIf Referer "^$" local_ref=1
   Deny from env=!local_ref
 </FilesMatch>

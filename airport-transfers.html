@@ -15,34 +15,111 @@
   <meta property="og:url" content="https://executivetravel.wales/airport-transfers" />
   <meta property="og:title" content="Airport Transfers Cardiff | Reliable &amp; Professional Service" />
   <meta property="og:description" content="Professional airport transfers from Cardiff airport. Fixed prices, DBS-checked drivers, 24/7 booking." />
-  <meta name="twitter:card" content="summary" />
-  
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:image" content="https://executivetravel.wales/assets/bus1-new.jpg" />
+  <meta name="twitter:image" content="https://executivetravel.wales/assets/bus1-new.jpg" />
+
   <!-- Additional SEO -->
   <meta name="robots" content="index, follow" />
   <meta name="language" content="English" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
-  
-  <!-- JSON-LD Schema for Service -->
+
+  <!-- JSON-LD Schema -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "Executive Travel Wales - Airport Transfers",
-    "description": "Professional airport transfer service from Cardiff Airport to South Wales",
+    "name": "Executive Travel Wales",
+    "description": "Professional airport transfer service from Cardiff Airport across South Wales",
     "url": "https://executivetravel.wales/airport-transfers",
     "telephone": "+447312000444",
-    "email": "info@executivetravelwales.co.uk",
+    "email": "evantaxiservice@gmail.com",
+    "image": "https://executivetravel.wales/assets/bus1-new.jpg",
     "address": {
       "@type": "PostalAddress",
-      "addressLocality": "Cardiff",
+      "streetAddress": "Unit 4e Pant Industrial Estate",
+      "addressLocality": "Merthyr Tydfil",
       "addressRegion": "South Wales",
+      "postalCode": "CF48 2SR",
       "addressCountry": "GB"
     },
-    "areaServed": ["Cardiff", "South Wales", "Newport", "Swansea"],
-    "priceRange": "£££",
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 51.749,
+      "longitude": -3.378
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+      "opens": "00:00",
+      "closes": "23:59"
+    },
+    "areaServed": ["Cardiff", "South Wales", "Newport", "Swansea", "Merthyr Tydfil", "Bridgend"],
+    "priceRange": "££-£££",
     "serviceType": "Airport Transfer"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://executivetravel.wales/"},
+      {"@type": "ListItem", "position": 2, "name": "Airport Transfers", "item": "https://executivetravel.wales/airport-transfers"}
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I book an airport transfer?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You can call us on 07312 000444 or fill out the contact form on our website. Provide your flight details, number of passengers, luggage details, and pickup location. We'll confirm availability and provide a fixed quote immediately."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What if my flight is delayed?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We monitor all flight arrivals using real-time tracking. If your flight is delayed, your driver will adjust accordingly at no extra charge. We never charge you for airport delay - only the fixed price agreed on booking."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I book a return airport transfer?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! We offer both one-way and return airport transfers. Return bookings include the outbound journey and return pickup at your specified time. A 10% discount applies to return transfers."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What's your cancellation policy?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Cancel for free up to 48 hours before your transfer. Cancellations within 48 hours may incur a charge. If you need to reschedule instead, we're happy to adjust your booking."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do you offer group airport transfers?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Absolutely! For groups of 8+, we can arrange a coach or multiple vehicles. Group transfers are perfect for tours, corporate teams, and large family holidays. Contact us for group pricing."
+        }
+      }
+    ]
   }
   </script>
 </head>
@@ -130,6 +207,18 @@
       </div>
     </section>
   </main>
+
+  <!-- Related Services -->
+  <section style="background:var(--bg-warm);padding:40px 0;">
+    <div class="container" style="text-align:center;">
+      <h2 style="margin-bottom:20px;">Our Other Services</h2>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+        <a href="minibus-hire.html" class="btn btn-outline">Minibus Hire</a>
+        <a href="corporate-hire.html" class="btn btn-outline">Corporate Hire</a>
+        <a href="event-transport.html" class="btn btn-outline">Event Transport</a>
+      </div>
+    </div>
+  </section>
 
   <!-- Footer -->
   <footer class="footer">
