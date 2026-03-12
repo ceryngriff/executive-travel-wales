@@ -957,6 +957,105 @@ main.container {
   padding: 48px 0 64px;
 }
 
+/* ===== 18b. SISTER COMPANY BANNER ===== */
+.sister-banner {
+  background: var(--ink);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.sister-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gold-gradient);
+}
+.sister-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 50%, rgba(201,168,76,.06) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 50%, rgba(201,168,76,.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.sister-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 44px 0;
+}
+
+.sister-content {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sister-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(201,168,76,.12), rgba(201,168,76,.2));
+  border: 1px solid rgba(201,168,76,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--gold);
+}
+.sister-icon svg { width: 28px; height: 28px; }
+
+.sister-title {
+  margin: 0 0 6px;
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.sister-text {
+  margin: 0;
+  color: rgba(255,255,255,.6);
+  font-size: 15px;
+  line-height: 1.65;
+  max-width: 520px;
+}
+.sister-text strong {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.sister-cta {
+  flex-shrink: 0;
+  height: 50px;
+  padding: 0 28px;
+  font-size: 15px;
+}
+
+@media (max-width: 768px) {
+  .sister-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 24px;
+    padding: 36px 0;
+  }
+  .sister-content {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .sister-text { max-width: 100%; }
+}
+
 /* ===== 19. FOOTER ===== */
 .footer {
   background: linear-gradient(180deg, #0a0e1a, #060912);
