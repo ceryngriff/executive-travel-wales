@@ -37,8 +37,8 @@
     "url": "https://executivetravel.wales",
     "telephone": "+447312000444",
     "email": "evantaxiservice@gmail.com",
-    "image": "https://executivetravel.wales/assets/logo.jpg",
-    "logo": "https://executivetravel.wales/assets/logo.jpg",
+    "image": "https://executivetravel.wales/assets/logo.png",
+    "logo": "https://executivetravel.wales/assets/logo.png",
     "priceRange": "££-£££",
     "currenciesAccepted": "GBP",
     "paymentAccepted": "Cash, Credit Card, Contactless",
@@ -83,7 +83,7 @@
     "@type": "Organization",
     "name": "Executive Travel Wales",
     "url": "https://executivetravel.wales",
-    "logo": "https://executivetravel.wales/assets/logo.jpg",
+    "logo": "https://executivetravel.wales/assets/logo.png",
     "contactPoint": {
       "@type": "ContactPoint",
       "telephone": "+447312000444",
@@ -106,7 +106,7 @@
   <header class="site-header" role="banner" aria-label="Primary">
     <div class="container header-row">
       <a class="brand" href="#home">
-        <img src="assets/logo.jpg" alt="Executive Travel Wales Logo">
+        <img src="assets/logo.png" alt="Executive Travel Wales Logo">
         <span class="brand-name">Executive Travel Wales</span>
       </a>
 
@@ -309,22 +309,62 @@
         </div>
 
         <div class="fleet">
-          <figure class="reveal reveal-delay-1">
-            <img src="assets/fleet-exec.jpg" alt="Executive vehicle" loading="lazy" />
-            <figcaption><strong>Executive</strong> &middot; Premium comfort &middot; Business class</figcaption>
-          </figure>
-          <figure class="reveal reveal-delay-2">
-            <img src="assets/bus14-new.jpg" alt="Minibuses fleet" loading="lazy" />
-            <figcaption><strong>Minibuses</strong> &middot; 8-16 seats &middot; Groups &amp; private hire</figcaption>
-          </figure>
-          <figure class="reveal reveal-delay-3">
-            <img src="assets/bus8-new.jpg" alt="Luxury coach" loading="lazy" />
-            <figcaption><strong>Coach</strong> &middot; 24-28 seats &middot; Tours &amp; events</figcaption>
-          </figure>
-          <figure class="reveal reveal-delay-4">
-            <img src="assets/fleet-interior-1600.jpg" alt="Luxury interior" loading="lazy" />
-            <figcaption><strong>Luxury Interior</strong> &middot; Comfort &amp; space &middot; Premium journeys</figcaption>
-          </figure>
+          <button type="button" class="fleet-card reveal reveal-delay-1"
+            data-gallery-title="Executive"
+            data-gallery-images="assets/executive-1.png|Executive vehicle,assets/executive-2.png|Executive vehicle,assets/fleet-exec.jpg|Executive vehicle exterior,assets/bus1-new.jpg|Executive minibus on road,assets/bus6-new.jpg|Executive coach on motorway">
+            <span class="fleet-card-media">
+              <img src="assets/executive-1.png" alt="Executive vehicle" loading="lazy" />
+              <span class="fleet-card-badge" aria-hidden="true">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg>
+                View gallery
+              </span>
+            </span>
+            <span class="fleet-card-info">
+              <strong>Executive</strong> &middot; Premium comfort &middot; Business class
+            </span>
+          </button>
+          <button type="button" class="fleet-card reveal reveal-delay-2"
+            data-gallery-title="Minibuses (8-16 seats)"
+            data-gallery-images="assets/minibus-1.png|Minibus,assets/bus14-new.jpg|Minibus exterior,assets/bus2-new.jpg|Minibus exterior view,assets/bus5-new.jpg|Minibus at airport pickup,assets/fleet-minibuses-1600.jpg|Minibus fleet lineup,assets/bus15-new.jpg|Minibus,assets/bus10-new.jpg|Minibus">
+            <span class="fleet-card-media">
+              <img src="assets/minibus-1.png" alt="Minibus" loading="lazy" />
+              <span class="fleet-card-badge" aria-hidden="true">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg>
+                View gallery
+              </span>
+            </span>
+            <span class="fleet-card-info">
+              <strong>Minibuses</strong> &middot; 8-16 seats &middot; Groups &amp; private hire
+            </span>
+          </button>
+          <button type="button" class="fleet-card reveal reveal-delay-3"
+            data-gallery-title="Coach (24-28 seats)"
+            data-gallery-images="assets/coach-1.png|Coach,assets/coach-2.png|Coach,assets/bus8-new.jpg|Coach exterior,assets/bus3-new.jpg|Coach parked ready for boarding,assets/bus9-new.jpg|Fleet lineup,assets/bus11-new.jpg|Coach,assets/bus16-new.jpg|Coach">
+            <span class="fleet-card-media">
+              <img src="assets/coach-1.png" alt="Coach" loading="lazy" />
+              <span class="fleet-card-badge" aria-hidden="true">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg>
+                View gallery
+              </span>
+            </span>
+            <span class="fleet-card-info">
+              <strong>Coach</strong> &middot; 24-28 seats &middot; Tours &amp; events
+            </span>
+          </button>
+          <button type="button" class="fleet-card reveal reveal-delay-4"
+            data-gallery-title="Luxury Interior"
+            data-gallery-images="assets/interior-1.png|Luxury interior,assets/interior-2.png|Luxury interior,assets/fleet-interior-1600.jpg|Luxury interior,assets/bus4-new.jpg|Luxury minibus interior,assets/IMG_2242.jpg|Vehicle interior detail,assets/IMG_8484.JPG|Vehicle interior detail">
+            <span class="fleet-card-media">
+              <img src="assets/interior-1.png" alt="Luxury interior" loading="lazy" />
+              <span class="fleet-card-badge" aria-hidden="true">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg>
+                View gallery
+              </span>
+            </span>
+            <span class="fleet-card-info">
+              <strong>Luxury Interior</strong> &middot; Comfort &amp; space &middot; Premium journeys
+            </span>
+          </button>
         </div>
       </div>
     </section>
@@ -550,6 +590,32 @@
   <button class="back-to-top" aria-label="Back to top" type="button">
     <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg>
   </button>
+
+  <!-- FLEET LIGHTBOX -->
+  <div class="lightbox" id="fleetLightbox" role="dialog" aria-modal="true" aria-labelledby="lightboxTitle" hidden>
+    <div class="lightbox-backdrop" data-lightbox-close></div>
+    <div class="lightbox-panel" role="document">
+      <header class="lightbox-header">
+        <h3 class="lightbox-title" id="lightboxTitle"></h3>
+        <button type="button" class="lightbox-close" aria-label="Close gallery" data-lightbox-close>
+          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="lightbox-stage">
+        <button type="button" class="lightbox-nav lightbox-prev" aria-label="Previous photo">
+          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <img class="lightbox-image" alt="" />
+        <button type="button" class="lightbox-nav lightbox-next" aria-label="Next photo">
+          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <footer class="lightbox-footer">
+        <span class="lightbox-counter" aria-live="polite"></span>
+        <div class="lightbox-thumbs" role="tablist"></div>
+      </footer>
+    </div>
+  </div>
 
   <script src="js/main.js" defer></script>
 </body>

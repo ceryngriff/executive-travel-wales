@@ -156,3 +156,113 @@ if (quoteForm) handleWeb3Form(quoteForm, "quote-success");
 
 const contactForm = document.getElementById("contactForm");
 if (contactForm) handleWeb3Form(contactForm, "contact-success");
+
+// ===== Fleet lightbox gallery =====
+(function initFleetLightbox() {
+  const cards = document.querySelectorAll(".fleet-card");
+  const lightbox = document.getElementById("fleetLightbox");
+  if (!cards.length || !lightbox) return;
+
+  const titleEl = lightbox.querySelector(".lightbox-title");
+  const imageEl = lightbox.querySelector(".lightbox-image");
+  const counterEl = lightbox.querySelector(".lightbox-counter");
+  const thumbsEl = lightbox.querySelector(".lightbox-thumbs");
+  const prevBtn = lightbox.querySelector(".lightbox-prev");
+  const nextBtn = lightbox.querySelector(".lightbox-next");
+  const closeEls = lightbox.querySelectorAll("[data-lightbox-close]");
+
+  let images = [];
+  let index = 0;
+  let lastFocus = null;
+
+  function parseGallery(card) {
+    const raw = card.getAttribute("data-gallery-images") || "";
+    return raw.split(",").map((entry) => {
+      const [src, alt] = entry.split("|").map((s) => (s || "").trim());
+      return { src, alt: alt || "" };
+    }).filter((item) => item.src);
+  }
+
+  function renderThumbs() {
+    thumbsEl.innerHTML = "";
+    images.forEach((img, i) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-label", `Show photo ${i + 1}`);
+      btn.setAttribute("aria-selected", i === index ? "true" : "false");
+      const t = document.createElement("img");
+      t.src = img.src;
+      t.alt = "";
+      t.loading = "lazy";
+      btn.appendChild(t);
+      btn.addEventListener("click", () => show(i));
+      thumbsEl.appendChild(btn);
+    });
+  }
+
+  function update() {
+    const current = images[index];
+    if (!current) return;
+    imageEl.src = current.src;
+    imageEl.alt = current.alt;
+    counterEl.textContent = `${index + 1} / ${images.length}`;
+    Array.from(thumbsEl.children).forEach((b, i) => {
+      b.setAttribute("aria-selected", i === index ? "true" : "false");
+      if (i === index) b.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    });
+    const single = images.length <= 1;
+    prevBtn.disabled = single;
+    nextBtn.disabled = single;
+  }
+
+  function show(i) {
+    if (!images.length) return;
+    index = (i + images.length) % images.length;
+    update();
+  }
+
+  function open(card) {
+    images = parseGallery(card);
+    if (!images.length) return;
+    titleEl.textContent = card.getAttribute("data-gallery-title") || "Gallery";
+    index = 0;
+    renderThumbs();
+    update();
+    lastFocus = document.activeElement;
+    lightbox.hidden = false;
+    document.body.classList.add("lightbox-open");
+    setTimeout(() => closeEls[closeEls.length - 1]?.focus(), 0);
+  }
+
+  function close() {
+    lightbox.hidden = true;
+    document.body.classList.remove("lightbox-open");
+    imageEl.src = "";
+    if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+  }
+
+  cards.forEach((card) => {
+    card.addEventListener("click", () => open(card));
+  });
+
+  prevBtn.addEventListener("click", () => show(index - 1));
+  nextBtn.addEventListener("click", () => show(index + 1));
+  closeEls.forEach((el) => el.addEventListener("click", close));
+
+  document.addEventListener("keydown", (e) => {
+    if (lightbox.hidden) return;
+    if (e.key === "Escape") close();
+    else if (e.key === "ArrowLeft") show(index - 1);
+    else if (e.key === "ArrowRight") show(index + 1);
+  });
+
+  // Touch/swipe within stage
+  const stage = lightbox.querySelector(".lightbox-stage");
+  let sx = 0;
+  stage.addEventListener("touchstart", (e) => { sx = e.changedTouches[0].screenX; }, { passive: true });
+  stage.addEventListener("touchend", (e) => {
+    const dx = sx - e.changedTouches[0].screenX;
+    if (Math.abs(dx) > 50) (dx > 0 ? show(index + 1) : show(index - 1));
+  }, { passive: true });
+})();
