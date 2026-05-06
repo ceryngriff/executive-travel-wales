@@ -1,4 +1,4 @@
-// Executive Travel Wales — Site JS
+// Executive Travel Wales - Site JS
 
 // Footer year
 const y = document.getElementById("y");
