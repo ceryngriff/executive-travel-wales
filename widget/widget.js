@@ -210,9 +210,9 @@
   // ---- State ----
   function freshBooking() {
     return {
-      active: false, step: null, awaitingConfirm: false, quote: null,
+      active: false, step: null, awaitingConfirm: false, awaitingFlight: false, quote: null,
       serviceType: '', dateTime: '', pickupLocation: '', destination: '',
-      vehicleClass: '', passengers: '', returnTrip: '', name: '', contact: '', notes: '',
+      vehicleClass: '', passengers: '', returnTrip: '', flightNumber: '', name: '', contact: '', notes: '',
     };
   }
 
@@ -345,12 +345,24 @@
       'Vehicle: ' + (VEHICLE_LABELS[b.vehicleClass] || b.vehicleClass),
       'Passengers: ' + b.passengers,
       'Return: ' + b.returnTrip,
-      'Name: ' + b.name,
-      'Contact: ' + b.contact,
-      'Notes: ' + (b.notes || 'None'),
     ];
+    if (b.flightNumber) lines.push('Flight no: ' + b.flightNumber);
+    lines.push('Name: ' + b.name);
+    lines.push('Contact: ' + b.contact);
+    lines.push('Notes: ' + (b.notes || 'None'));
     if (b.quote && b.quote.quotable) lines.push('Estimate: £' + b.quote.price + ' (confirmed at booking)');
     pushMessage(app, 'assistant', lines.join('\n'));
+  }
+
+  // Show the quote, then move into collecting contact details (demo flow).
+  function demoQuoteThenContact(app, b) {
+    b.quote = localQuote(b);
+    pushMessage(app, 'assistant', formatQuoteMessage(b.quote));
+    pushMessage(app, 'assistant', (b.quote.quotable
+      ? 'Shall I take your details to book this? '
+      : 'I can still take your details for a personalised callback. ') + CONTACT_STEPS[0].q);
+    b.step = DEMO_STEPS.length;
+    b.contactStep = 0;
   }
 
   function handleDemoBooking(app, text) {
@@ -373,6 +385,14 @@
       return;
     }
 
+    // Return-trip flight number (asked once the visitor says it's a return).
+    if (b.awaitingFlight) {
+      b.flightNumber = text.trim();
+      b.awaitingFlight = false;
+      demoQuoteThenContact(app, b);
+      return;
+    }
+
     // Trip-detail steps
     if (b.step < DEMO_STEPS.length) {
       var step = DEMO_STEPS[b.step];
@@ -385,19 +405,14 @@
       }
       b.step++;
 
-      // After return trip, produce the quote.
       if (b.step === DEMO_STEPS.length) {
-        b.quote = localQuote(b);
-        pushMessage(app, 'assistant', formatQuoteMessage(b.quote));
-        if (b.quote.quotable) {
-          pushMessage(app, 'assistant', 'Shall I take your details to book this? ' + CONTACT_STEPS[0].q);
-          b.step = DEMO_STEPS.length; // move into contact steps
-          b.contactStep = 0;
-        } else {
-          pushMessage(app, 'assistant', 'I can still take your details for a personalised callback. ' + CONTACT_STEPS[0].q);
-          b.step = DEMO_STEPS.length;
-          b.contactStep = 0;
+        // For a return trip, get the flight number before quoting.
+        if (isReturn(b.returnTrip) && !b.flightNumber) {
+          b.awaitingFlight = true;
+          pushMessage(app, 'assistant', 'As it’s a return trip, what’s your return flight number? This lets us track your inbound flight for the pickup.');
+          return;
         }
+        demoQuoteThenContact(app, b);
         return;
       }
       pushMessage(app, 'assistant', DEMO_STEPS[b.step].q);
