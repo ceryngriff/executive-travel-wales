@@ -103,19 +103,15 @@
       return quote.reason + ' You can reach us on ' + PHONE_PLACEHOLDER + '.';
     }
     var lines = [
-      'Estimate — confirmed at booking',
+      'Estimate, confirmed at booking',
       '',
       quote.vehicleLabel + ': ' + PICKUP_POINT + ' to ' + quote.destination + (quote.returnTrip ? ' (return)' : ' (one-way)'),
+      (quote.returnTrip ? 'Return fare: £' : 'One-way fare: £') + quote.price,
+      '',
+      'Total estimate: £' + quote.price,
+      '',
+      'Please note: prices are from one pickup point in Merthyr Tydfil, and this is an estimate confirmed at booking.',
     ];
-    if (quote.returnTrip) {
-      lines.push('Return fare: £' + quote.price);
-    } else {
-      lines.push('One-way fare (half the £' + quote.returnFare + ' return fare + 10%): £' + quote.price);
-    }
-    lines.push('');
-    lines.push('Total estimate: £' + quote.price);
-    lines.push('');
-    lines.push('Please note: prices are from one pickup point in Merthyr Tydfil, listed fares are return (one-way is half the return plus 10%), and this is an estimate confirmed at booking.');
     return lines.join('\n');
   }
 
@@ -330,14 +326,14 @@
     app.state.booking = freshBooking();
     app.state.booking.active = true;
     app.state.booking.step = 0;
-    pushNotice(app, 'Let’s get you a quote — a few quick questions.');
+    pushNotice(app, 'Let’s get you a quote. A few quick questions.');
     pushMessage(app, 'assistant', DEMO_STEPS[0].q);
   }
 
   function demoConfirmSummary(app) {
     var b = app.state.booking;
     var lines = [
-      'Here’s your request — please confirm (yes/no):', '',
+      'Here’s your request. Please confirm (yes/no):', '',
       'Service: ' + b.serviceType,
       'Date & time: ' + b.dateTime,
       'Pickup: ' + b.pickupLocation,
@@ -371,14 +367,14 @@
     if (b.awaitingConfirm) {
       if (/\b(yes|y|confirm|correct|go ahead|send|please do)\b/i.test(text)) {
         b.active = false; b.awaitingConfirm = false;
-        pushMessage(app, 'assistant', 'Thank you — that’s all we need. The team will be in touch shortly to confirm. For anything urgent, call ' + PHONE_PLACEHOLDER + '.');
+        pushMessage(app, 'assistant', 'Thank you, that’s all we need. The team will be in touch shortly to confirm. For anything urgent, call ' + PHONE_PLACEHOLDER + '.');
         pushNotice(app, 'Demo mode: no booking email was sent.');
         saveSession(app.state);
         return;
       }
       if (/\b(no|n|change|edit|wrong)\b/i.test(text)) {
         b.awaitingConfirm = false; b.active = true; b.step = 0;
-        pushMessage(app, 'assistant', 'No problem — let’s go through it again. ' + DEMO_STEPS[0].q);
+        pushMessage(app, 'assistant', 'No problem, let’s go through it again. ' + DEMO_STEPS[0].q);
         return;
       }
       pushMessage(app, 'assistant', 'Please reply "yes" to confirm or "no" to change something.');
@@ -484,10 +480,10 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(booking),
     }).then(function (res) {
-      if (!res.ok) { pushNotice(app, 'We couldn’t email your request automatically — please call ' + PHONE_PLACEHOLDER + '.'); }
+      if (!res.ok) { pushNotice(app, 'We couldn’t email your request automatically. Please call ' + PHONE_PLACEHOLDER + '.'); }
       else { pushNotice(app, 'Your request has been sent to the team.'); }
     }).catch(function () {
-      pushNotice(app, 'We couldn’t email your request automatically — please call ' + PHONE_PLACEHOLDER + '.');
+      pushNotice(app, 'We couldn’t email your request automatically. Please call ' + PHONE_PLACEHOLDER + '.');
     });
   }
 
@@ -510,7 +506,7 @@
         }
         var replyText = (result.data && result.data.reply) || '';
         var parsed = parseBookingBlock(replyText);
-        pushMessage(app, 'assistant', parsed.clean || 'Sorry, I didn’t catch that — could you rephrase?');
+        pushMessage(app, 'assistant', parsed.clean || 'Sorry, I didn’t catch that. Could you rephrase?');
         if (parsed.booking) submitBooking(app, parsed.booking);
       })
       .catch(function () {

@@ -102,8 +102,8 @@ function parseReturnTrip(returnTrip) {
 
 const CUSTOMER_AWARENESS = [
   'Prices are based on one pickup point in Merthyr Tydfil.',
-  'Listed fares are for a return (round-trip) journey; a one-way is half the return fare plus 10%.',
-  'This is an estimate, confirmed at booking. Extra pickups or a different start point need a custom quote.',
+  'This is an estimate, confirmed at booking.',
+  'Extra pickups or a different start point need a custom quote.',
 ];
 
 // Returns { quotable: true, price, currency, breakdown, estimate, ... }
@@ -156,7 +156,7 @@ function computeQuote(input = {}) {
       ]
     : [
         `${vehicle.label}: Merthyr Tydfil to ${destKey} Airport (one-way)`,
-        `One-way fare (half the £${returnFare} return fare + 10%): £${price}`,
+        `One-way fare: £${price}`,
       ];
 
   return {
@@ -169,7 +169,7 @@ function computeQuote(input = {}) {
     vehicleClass,
     vehicleLabel: vehicle.label,
     returnTrip: isReturn,
-    returnFare,
+    returnFare: isReturn ? returnFare : undefined,
     breakdown,
     awareness: CUSTOMER_AWARENESS,
   };
@@ -296,7 +296,7 @@ function businessFacts(env) {
 
 function buildSystemPrompt(env) {
   const f = businessFacts(env);
-  return `You are the virtual assistant for ${f.BUSINESS_NAME}. Be warm, professional and concise. Use British English.
+  return `You are the virtual assistant for ${f.BUSINESS_NAME}. Be warm, professional and concise. Use British English. Never use em dashes or en dashes anywhere in your replies; use commas, full stops or brackets instead.
 
 ROLE
 - You do two jobs: answer questions about the business, and help visitors get a quote or booking.
@@ -318,14 +318,14 @@ BUSINESS FACTS
 - Pricing policy: ${f.PRICING_POLICY}
 - Booking notes: ${f.BOOKING_NOTES}
 
-PRICING — use the get_quote tool, never your own guess
+PRICING. Use the get_quote tool, never your own guess.
 - Fixed prices are available ONLY for journeys that START in Merthyr Tydfil and go to one of these airports: Bristol, Cardiff, Birmingham, Heathrow, Gatwick.
 - Vehicle classes: car (Executive car, up to 3), 8_seater (up to 8), 16_seater (16-seater minibus), 24_seater (24-seater coach), 28_seater (28-seater coach).
-- Listed fares are for a RETURN (round-trip) journey. A one-way trip is half the return fare plus 10% — the get_quote tool works this out, so always read back its figure rather than calculating yourself.
-- When a visitor asks "how much" or shows booking intent, state up front that listed prices are from a single pickup point in Merthyr Tydfil and are return fares, then gather: pickup, destination airport, vehicle class, passengers, date/time and whether it is a return or one-way trip.
+- Listed fares are for a RETURN (round-trip) journey; the get_quote tool also returns the correct one-way price. Always read back the tool's figure. NEVER work out or explain how a price is calculated, and never mention any percentages, multipliers or formulas. Just state the price.
+- When a visitor asks "how much" or shows booking intent, state up front that listed prices are from a single pickup point in Merthyr Tydfil, then gather: pickup, destination airport, vehicle class, passengers, date/time and whether it is a return or one-way trip.
 - Once you have pickup, destination, vehicle class and return-or-one-way, CALL the get_quote tool. Read back the figure it returns as an estimate.
-- When you give a quote you MUST also state, in your own words: it is based on one pickup point in Merthyr Tydfil; listed prices are return fares (one-way is half the return plus 10%); it is an estimate confirmed at booking.
-- If get_quote returns quotable:false, do NOT guess a price — tell the visitor the team will send a personalised quote and give the phone number.
+- When you give a quote, also state in your own words that it is based on one pickup point in Merthyr Tydfil and is an estimate confirmed at booking. Do not explain how the price was worked out.
+- If get_quote returns quotable:false, do NOT guess a price. Tell the visitor the team will send a personalised quote and give the phone number.
 - The visitor can change details (e.g. vehicle class) and you re-quote.
 
 BOOKING
@@ -333,7 +333,7 @@ BOOKING
 - When you have everything, show a short summary INCLUDING the quoted estimate and ask the visitor to confirm.
 - ONLY when the visitor confirms, end your message with a single booking block on its own line, exactly in this format (the website reads it and emails the team; the visitor does not see the raw block):
 [[BOOKING]]{"serviceType":"...","dateTime":"...","pickupLocation":"...","destination":"...","vehicleClass":"...","passengers":"...","returnTrip":"...","flightNumber":"...","name":"...","contact":"...","notes":"...","quote":{"price":0,"currency":"GBP","estimate":true,"quotable":true}}[[/BOOKING]]
-  Use the real collected values. If a field is unknown use an empty string (leave flightNumber empty for one-way trips). If no quote was produced, set "quote" to null. Put a friendly confirmation sentence (e.g. "Thanks — we'll be in touch shortly. For anything urgent call ${f.PHONE}.") BEFORE the block. Do not output the block until the visitor has confirmed.`;
+  Use the real collected values. If a field is unknown use an empty string (leave flightNumber empty for one-way trips). If no quote was produced, set "quote" to null. Put a friendly confirmation sentence (e.g. "Thanks, we'll be in touch shortly. For anything urgent call ${f.PHONE}.") BEFORE the block. Do not output the block until the visitor has confirmed.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -597,7 +597,7 @@ async function sendBookingEmail(env, booking) {
   const from = env.BOOKING_FROM_EMAIL;
   if (!to || !from) throw new Error('Missing BOOKING_TO_EMAIL / BOOKING_FROM_EMAIL.');
 
-  const subject = 'New booking request — Executive Travel Wales';
+  const subject = 'New booking request from Executive Travel Wales';
   const text = formatBookingEmail(booking);
 
   if (provider === 'resend') {
