@@ -678,6 +678,19 @@ const FB_HISTORY_TURNS = 16; // user+assistant messages kept per Messenger user
 const FB_HISTORY_TTL = 60 * 60 * 24; // 24h
 const FB_MSG_LIMIT = 1900; // Messenger hard limit is 2000 chars
 
+// Records what happened on the last Messenger event, for debugging (no message
+// text stored). Read via GET /messenger/debug?token=<verify token>.
+async function putMessengerDebug(env, record) {
+  if (!env.CHAT_HISTORY) return;
+  try {
+    await env.CHAT_HISTORY.put('debug:messenger', JSON.stringify({ ...record, ts: Date.now() }), {
+      expirationTtl: 3600,
+    });
+  } catch (e) {
+    /* ignore */
+  }
+}
+
 function handleMessengerVerify(request, env) {
   const params = new URL(request.url).searchParams;
   const mode = params.get('hub.mode');
@@ -707,10 +720,30 @@ async function verifyMessengerSignature(rawBody, header, appSecret) {
   return diff === 0;
 }
 
-async function sendMessengerMessage(env, recipientId, text) {
-  if (!env.MESSENGER_PAGE_TOKEN) {
-    console.error('MESSENGER_PAGE_TOKEN not set; cannot reply');
-    return;
+// Resolve the Page Access Token to reply with. Supports multiple Facebook Pages
+// via MESSENGER_PAGE_TOKENS (JSON: {"<pageId>":"<token>"}), with a single-page
+// MESSENGER_PAGE_TOKEN fallback.
+function pageTokenFor(env, pageId) {
+  if (env.MESSENGER_PAGE_TOKENS) {
+    try {
+      const map = JSON.parse(env.MESSENGER_PAGE_TOKENS);
+      if (map && typeof map === 'object') {
+        if (pageId && map[pageId]) return map[pageId];
+        const values = Object.values(map);
+        if (values.length === 1) return values[0]; // only one page configured
+      }
+    } catch (e) {
+      console.error('MESSENGER_PAGE_TOKENS is not valid JSON');
+    }
+  }
+  return env.MESSENGER_PAGE_TOKEN || null;
+}
+
+async function sendMessengerMessage(env, pageId, recipientId, text) {
+  const token = pageTokenFor(env, pageId);
+  if (!token) {
+    console.error('No page token configured for page', pageId);
+    return { ok: false, error: 'no_token_for_page' };
   }
   // Split long replies under the Messenger character limit, on line breaks.
   const chunks = [];
@@ -723,19 +756,24 @@ async function sendMessengerMessage(env, recipientId, text) {
   }
   chunks.push(remaining);
   for (const chunk of chunks) {
-    const res = await fetch(`${GRAPH_API}/me/messages?access_token=${encodeURIComponent(env.MESSENGER_PAGE_TOKEN)}`, {
+    const res = await fetch(`${GRAPH_API}/me/messages?access_token=${encodeURIComponent(token)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ recipient: { id: recipientId }, messaging_type: 'RESPONSE', message: { text: chunk } }),
     });
-    if (!res.ok) console.error('Messenger send failed', res.status, await res.text());
+    if (!res.ok) {
+      const body = await res.text();
+      console.error('Messenger send failed', res.status, body);
+      return { ok: false, status: res.status, error: body.slice(0, 300) };
+    }
   }
+  return { ok: true };
 }
 
-async function loadFbHistory(env, psid) {
+async function loadFbHistory(env, pageId, psid) {
   if (!env.CHAT_HISTORY) return [];
   try {
-    const raw = await env.CHAT_HISTORY.get(`fb:${psid}`);
+    const raw = await env.CHAT_HISTORY.get(`fb:${pageId}:${psid}`);
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
@@ -743,10 +781,10 @@ async function loadFbHistory(env, psid) {
   }
 }
 
-async function saveFbHistory(env, psid, history) {
+async function saveFbHistory(env, pageId, psid, history) {
   if (!env.CHAT_HISTORY) return;
   try {
-    await env.CHAT_HISTORY.put(`fb:${psid}`, JSON.stringify(history.slice(-FB_HISTORY_TURNS)), {
+    await env.CHAT_HISTORY.put(`fb:${pageId}:${psid}`, JSON.stringify(history.slice(-FB_HISTORY_TURNS)), {
       expirationTtl: FB_HISTORY_TTL,
     });
   } catch (e) {
@@ -754,9 +792,9 @@ async function saveFbHistory(env, psid, history) {
   }
 }
 
-async function processMessengerEvent(env, psid, userText) {
+async function processMessengerEvent(env, pageId, psid, userText) {
   const text = String(userText).slice(0, MAX_MESSAGE_LENGTH);
-  const history = await loadFbHistory(env, psid);
+  const history = await loadFbHistory(env, pageId, psid);
   // Persist only plain text turns; tool rounds stay inside runClaudeConversation.
   const working = history.map((m) => ({ role: m.role, content: m.content }));
   working.push({ role: 'user', content: text });
@@ -778,21 +816,37 @@ async function processMessengerEvent(env, psid, userText) {
       console.error('Messenger booking email failed', e);
     }
   }
-  await sendMessengerMessage(env, psid, outText);
+  const sendResult = await sendMessengerMessage(env, pageId, psid, outText);
+  await putMessengerDebug(env, {
+    stage: 'processed',
+    pageId,
+    hasTokenForPage: !!pageTokenFor(env, pageId),
+    send: sendResult,
+    replyChars: outText.length,
+    booking: !!booking,
+  });
 
   const updated = history.concat([
     { role: 'user', content: text },
     { role: 'assistant', content: outText },
   ]);
-  await saveFbHistory(env, psid, updated);
+  await saveFbHistory(env, pageId, psid, updated);
 }
 
 async function handleMessengerWebhook(request, env, ctx) {
   const rawBody = await request.text();
   if (rawBody.length > MAX_BODY_BYTES) return new Response('Too large', { status: 413 });
 
-  const ok = await verifyMessengerSignature(rawBody, request.headers.get('x-hub-signature-256'), env.MESSENGER_APP_SECRET);
-  if (!ok) return new Response('Invalid signature', { status: 403 });
+  const sigHeader = request.headers.get('x-hub-signature-256');
+  const ok = await verifyMessengerSignature(rawBody, sigHeader, env.MESSENGER_APP_SECRET);
+  if (!ok) {
+    await putMessengerDebug(env, {
+      stage: 'signature_failed',
+      hasSignatureHeader: !!sigHeader,
+      hasAppSecret: !!env.MESSENGER_APP_SECRET,
+    });
+    return new Response('Invalid signature', { status: 403 });
+  }
 
   let payload;
   try {
@@ -800,15 +854,20 @@ async function handleMessengerWebhook(request, env, ctx) {
   } catch (e) {
     return new Response('Bad JSON', { status: 400 });
   }
-  if (payload.object !== 'page') return new Response('Not a page event', { status: 404 });
+  if (payload.object !== 'page') {
+    await putMessengerDebug(env, { stage: 'not_page_object', object: payload.object });
+    return new Response('Not a page event', { status: 404 });
+  }
+  await putMessengerDebug(env, { stage: 'received', entries: (payload.entry || []).length });
 
   const jobs = [];
   for (const entry of payload.entry || []) {
+    const pageId = entry.id; // the Facebook Page this event is for
     for (const event of entry.messaging || []) {
       const psid = event.sender && event.sender.id;
       const message = event.message;
       if (psid && message && message.text && !message.is_echo) {
-        jobs.push(processMessengerEvent(env, psid, message.text));
+        jobs.push(processMessengerEvent(env, pageId, psid, message.text));
       }
     }
   }
@@ -824,6 +883,18 @@ async function handleMessengerWebhook(request, env, ctx) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    // Protected debug breadcrumb for Messenger troubleshooting.
+    if (url.pathname === '/messenger/debug' && request.method === 'GET') {
+      if (url.searchParams.get('token') !== env.MESSENGER_VERIFY_TOKEN) {
+        return new Response('Forbidden', { status: 403 });
+      }
+      const value = env.CHAT_HISTORY ? await env.CHAT_HISTORY.get('debug:messenger') : null;
+      return new Response(value || '{"info":"no messenger events recorded yet"}', {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     // Messenger webhook is server-to-server (no Origin) — handle before CORS gate.
     if (url.pathname === '/messenger') {
