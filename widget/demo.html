@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Executive Travel Wales Chatbot Demo</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, #0d1118 0%, #131a27 100%);
+        color: #edf2f7;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+      .demo-shell {
+        max-width: 820px;
+        width: 100%;
+        text-align: center;
+      }
+      .demo-shell h1 {
+        margin: 0 0 16px;
+        font-size: clamp(2rem, 4vw, 3.25rem);
+        line-height: 1.05;
+      }
+      .demo-shell p {
+        margin: 0 0 24px;
+        color: #c5cee0;
+        font-size: 1rem;
+        line-height: 1.8;
+      }
+      .demo-shell code {
+        background: rgba(255,255,255,0.08);
+        color: #fff;
+        padding: 4px 8px;
+        border-radius: 8px;
+      }
+      .demo-shell a {
+        color: #8bb9ff;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="demo-shell">
+      <h1>Executive Travel Wales Chatbot Demo</h1>
+      <p>
+        This page runs the self-contained widget in demo mode with a scripted booking flow.
+        Click the floating chat button to test the question and quote experience.
+      </p>
+      <p>
+        Try: <code>How much to Heathrow?</code>, <code>I need an airport transfer</code>, or just <code>Can I get a quote?</code>
+        The scripted demo collects the trip details, prices it from the Merthyr&nbsp;Tydfil fixed-route table, and walks through to a booking confirmation.
+      </p>
+      <p>
+        The demo does not call a backend. When ready, use the same widget code with <code>data-worker-url</code> set to your Cloudflare Worker endpoint.
+      </p>
+      <p>
+        <a href="../index.html" target="_blank" rel="noopener">Open the main site</a>
+      </p>
+    </main>
+    <script src="widget.js" data-demo="true" data-accent="#c9a24b" data-greeting="Hi! Need a quote or have a question?"></script>
+  </body>
+</html>

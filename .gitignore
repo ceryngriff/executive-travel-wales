@@ -4,3 +4,9 @@ node_modules/
 Thumbs.db
 .claude/
 nul
+
+# Cloudflare Worker secrets & build artefacts — never commit
+.dev.vars
+worker/.dev.vars
+.wrangler/
+worker/.wrangler/

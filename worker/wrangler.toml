@@ -1,0 +1,23 @@
+name = "executive-travel-wales-chatbot"
+main = "src/index.js"
+compatibility_date = "2026-06-16"
+workers_dev = true
+
+# Non-secret configuration. Secrets (ANTHROPIC_API_KEY, RESEND_API_KEY,
+# BOOKING_TO_EMAIL, BOOKING_FROM_EMAIL) are set with `wrangler secret put NAME`,
+# or in worker/.dev.vars for `wrangler dev`. See README.
+[vars]
+ALLOWED_ORIGINS = "https://executivetravel.wales,https://www.executivetravel.wales"
+EMAIL_PROVIDER = "resend"
+CLAUDE_MODEL = "claude-sonnet-4-6"
+# Business facts used to build the system prompt.
+BUSINESS_TAGLINE = "Premium minibus and coach hire across South Wales — airport transfers, corporate travel and events."
+BUSINESS_PHONE = "07312000444"
+BUSINESS_EMAIL = "evanstaxismerthyr@hotmail.co.uk"
+BUSINESS_HOURS = "24/7"
+BUSINESS_AREAS = "Based in Merthyr Tydfil, covering Cardiff, Newport, Swansea and all of South Wales. UK-wide on request."
+BUSINESS_SERVICES = "Airport transfers, corporate travel, weddings and events, tours, group transport and private hire."
+BUSINESS_FLEET = "Modern fleet with DBS-checked drivers: executive cars (up to 3 passengers), minibuses (8 and 16 seats) and coaches (24 and 28 seats)."
+BUSINESS_AIRPORTS = "Fixed-route prices run from Merthyr Tydfil to Bristol, Cardiff, Birmingham, Heathrow and Gatwick airports. Other UK airports are quoted on request."
+BUSINESS_PRICING_POLICY = "Live estimates for fixed Merthyr Tydfil to airport routes, shown as an estimate confirmed at booking. Any other pickup, destination or special request is a personalised callback — never quote a firm price outside the quoting engine."
+BUSINESS_BOOKING_NOTES = "Airport transfers include flight tracking and punctual pickups. Bespoke itineraries for groups and tours."

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Executive Travel Wales — Live Worker Test</title>
+    <style>
+      body { margin: 0; min-height: 100vh; font-family: system-ui, sans-serif;
+        background: #11141a; color: #eef1f6; display: grid; place-items: center; padding: 24px; }
+      .card { max-width: 640px; text-align: center; }
+      h1 { font-size: 1.6rem; }
+      p { color: #aab2c0; line-height: 1.7; }
+      code { background: rgba(255,255,255,.08); padding: 2px 6px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Live Worker test</h1>
+      <p>
+        This page loads the real widget pointed at your local Worker
+        (<code>wrangler dev</code> on <code>http://localhost:8787</code>).
+        Click the chat button bottom-right and ask a real question or request a quote —
+        replies come from Claude via your Worker.
+      </p>
+      <p>If you deployed the Worker, change <code>data-worker-url</code> below to your
+        <code>*.workers.dev</code> URL to test production.</p>
+    </div>
+
+    <!-- Real widget, pointed at the local Worker. NOTE: data-demo is NOT set. -->
+    <script src="widget.js"
+      data-worker-url="http://localhost:8787"
+      data-accent="#c9a24b"
+      data-greeting="Hi! Need a quote or have a question?"></script>
+  </body>
+</html>
