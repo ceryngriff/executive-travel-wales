@@ -3,13 +3,22 @@ main = "src/index.js"
 compatibility_date = "2026-06-16"
 workers_dev = true
 
+# Per-user conversation memory for Facebook Messenger (one message at a time).
+[[kv_namespaces]]
+binding = "CHAT_HISTORY"
+id = "3eac5d8ac4154d099ebc1c42bf55a58a"
+
 # Non-secret configuration. Secrets (ANTHROPIC_API_KEY, RESEND_API_KEY,
-# BOOKING_TO_EMAIL, BOOKING_FROM_EMAIL) are set with `wrangler secret put NAME`,
-# or in worker/.dev.vars for `wrangler dev`. See README.
+# BOOKING_TO_EMAIL, BOOKING_FROM_EMAIL, and for Messenger:
+# MESSENGER_PAGE_TOKEN, MESSENGER_APP_SECRET) are set with
+# `wrangler secret put NAME`, or in worker/.dev.vars for `wrangler dev`. See README.
 [vars]
 ALLOWED_ORIGINS = "https://executivetravel.wales,https://www.executivetravel.wales"
 EMAIL_PROVIDER = "resend"
 CLAUDE_MODEL = "claude-sonnet-4-6"
+# Facebook Messenger webhook verify token — paste this exact value into Meta's
+# webhook setup ("Verify Token"). Not a secret, but keep it unguessable.
+MESSENGER_VERIFY_TOKEN = "etw-messenger-7c41ad92e6"
 # Business facts used to build the system prompt.
 BUSINESS_TAGLINE = "Premium minibus and coach hire across South Wales — airport transfers, corporate travel and events."
 BUSINESS_PHONE = "07312000444"

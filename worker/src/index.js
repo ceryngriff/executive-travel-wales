@@ -401,6 +401,50 @@ function extractText(content) {
 // /chat
 // ---------------------------------------------------------------------------
 
+// Runs Claude over `messages` (mutated in place with the tool rounds) and returns
+// the assistant's final text. Shared by /chat (website) and /messenger (Facebook).
+// Throws on a hard API failure.
+async function runClaudeConversation(env, messages) {
+  const systemPrompt = buildSystemPrompt(env);
+  for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
+    const response = await callAnthropic(env, systemPrompt, messages);
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(`Anthropic ${response.status}: ${detail}`);
+    }
+    const data = await response.json();
+    messages.push({ role: 'assistant', content: data.content });
+
+    if (data.stop_reason === 'tool_use') {
+      const toolResults = [];
+      for (const block of data.content || []) {
+        if (block && block.type === 'tool_use' && block.name === 'get_quote') {
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: block.id,
+            content: JSON.stringify(computeQuote(block.input || {})),
+          });
+        }
+      }
+      if (toolResults.length === 0) return extractText(data.content);
+      messages.push({ role: 'user', content: toolResults });
+      continue;
+    }
+    return extractText(data.content);
+  }
+  return 'Sorry, I had trouble completing that. Please call us and the team will help.';
+}
+
+// Pulls a [[BOOKING]]{...}[[/BOOKING]] block out of an assistant reply.
+const BOOKING_BLOCK_RE = /\[\[BOOKING\]\]([\s\S]*?)\[\[\/BOOKING\]\]/;
+function extractBooking(text) {
+  const match = text.match(BOOKING_BLOCK_RE);
+  if (!match) return { clean: text, booking: null };
+  let booking = null;
+  try { booking = JSON.parse(match[1].trim()); } catch (e) { booking = null; }
+  return { clean: text.replace(BOOKING_BLOCK_RE, '').trim(), booking };
+}
+
 async function handleChat(request, env, origin) {
   if (!enforceRateLimit(request)) {
     return jsonResponse({ error: 'Rate limit exceeded. Please wait a moment.' }, 429, origin);
@@ -437,55 +481,16 @@ async function handleChat(request, env, origin) {
     return jsonResponse({ error: 'Conversation must start with a user message.' }, 400, origin);
   }
 
-  const systemPrompt = buildSystemPrompt(env);
-
   try {
-    // Tool loop: let Claude call get_quote as many times as it needs.
-    for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-      const response = await callAnthropic(env, systemPrompt, messages);
-      if (!response.ok) {
-        const detail = await response.text();
-        console.warn('Anthropic error', response.status, detail);
-        return jsonResponse(
-          { error: 'The assistant is unavailable right now. Please try again shortly.' },
-          502,
-          origin
-        );
-      }
-      const data = await response.json();
-      messages.push({ role: 'assistant', content: data.content });
-
-      if (data.stop_reason === 'tool_use') {
-        const toolResults = [];
-        for (const block of data.content || []) {
-          if (block && block.type === 'tool_use' && block.name === 'get_quote') {
-            const quote = computeQuote(block.input || {});
-            toolResults.push({
-              type: 'tool_result',
-              tool_use_id: block.id,
-              content: JSON.stringify(quote),
-            });
-          }
-        }
-        if (toolResults.length === 0) {
-          // Unknown tool / nothing to run — return whatever text we have.
-          return jsonResponse({ reply: extractText(data.content) }, 200, origin);
-        }
-        messages.push({ role: 'user', content: toolResults });
-        continue;
-      }
-
-      return jsonResponse({ reply: extractText(data.content) }, 200, origin);
-    }
-
-    return jsonResponse(
-      { reply: 'Sorry, I had trouble completing that. Please call us and the team will help.' },
-      200,
-      origin
-    );
+    const reply = await runClaudeConversation(env, messages);
+    return jsonResponse({ reply }, 200, origin);
   } catch (error) {
     console.error('Chat handler failed', error);
-    return jsonResponse({ error: 'The chat service is unavailable right now.' }, 500, origin);
+    return jsonResponse(
+      { error: 'The assistant is unavailable right now. Please try again shortly.' },
+      502,
+      origin
+    );
   }
 }
 
@@ -655,11 +660,174 @@ async function handleBooking(request, env, origin) {
 }
 
 // ---------------------------------------------------------------------------
+// Facebook Messenger.
+//
+// GET  /messenger — webhook verification (Meta sends hub.challenge).
+// POST /messenger — incoming messages. Verified by HMAC signature, processed
+//                   with the same Claude brain + quote engine + booking email.
+// These are server-to-server (no Origin header), so they bypass the CORS gate
+// and are secured by the verify token + app-secret signature instead.
+// ---------------------------------------------------------------------------
+
+const GRAPH_API = 'https://graph.facebook.com/v21.0';
+const FB_HISTORY_TURNS = 16; // user+assistant messages kept per Messenger user
+const FB_HISTORY_TTL = 60 * 60 * 24; // 24h
+const FB_MSG_LIMIT = 1900; // Messenger hard limit is 2000 chars
+
+function handleMessengerVerify(request, env) {
+  const params = new URL(request.url).searchParams;
+  const mode = params.get('hub.mode');
+  const token = params.get('hub.verify_token');
+  const challenge = params.get('hub.challenge');
+  if (mode === 'subscribe' && token && token === env.MESSENGER_VERIFY_TOKEN) {
+    return new Response(challenge || '', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+  }
+  return new Response('Forbidden', { status: 403 });
+}
+
+async function verifyMessengerSignature(rawBody, header, appSecret) {
+  if (!header || !appSecret || !header.startsWith('sha256=')) return false;
+  const sigHex = header.slice('sha256='.length);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(appSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(rawBody));
+  const hex = [...new Uint8Array(mac)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  if (hex.length !== sigHex.length) return false;
+  let diff = 0;
+  for (let i = 0; i < hex.length; i++) diff |= hex.charCodeAt(i) ^ sigHex.charCodeAt(i);
+  return diff === 0;
+}
+
+async function sendMessengerMessage(env, recipientId, text) {
+  if (!env.MESSENGER_PAGE_TOKEN) {
+    console.error('MESSENGER_PAGE_TOKEN not set; cannot reply');
+    return;
+  }
+  // Split long replies under the Messenger character limit, on line breaks.
+  const chunks = [];
+  let remaining = String(text || '').trim() || 'Sorry, please try again.';
+  while (remaining.length > FB_MSG_LIMIT) {
+    let cut = remaining.lastIndexOf('\n', FB_MSG_LIMIT);
+    if (cut < FB_MSG_LIMIT / 2) cut = FB_MSG_LIMIT;
+    chunks.push(remaining.slice(0, cut));
+    remaining = remaining.slice(cut).trim();
+  }
+  chunks.push(remaining);
+  for (const chunk of chunks) {
+    const res = await fetch(`${GRAPH_API}/me/messages?access_token=${encodeURIComponent(env.MESSENGER_PAGE_TOKEN)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient: { id: recipientId }, messaging_type: 'RESPONSE', message: { text: chunk } }),
+    });
+    if (!res.ok) console.error('Messenger send failed', res.status, await res.text());
+  }
+}
+
+async function loadFbHistory(env, psid) {
+  if (!env.CHAT_HISTORY) return [];
+  try {
+    const raw = await env.CHAT_HISTORY.get(`fb:${psid}`);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function saveFbHistory(env, psid, history) {
+  if (!env.CHAT_HISTORY) return;
+  try {
+    await env.CHAT_HISTORY.put(`fb:${psid}`, JSON.stringify(history.slice(-FB_HISTORY_TURNS)), {
+      expirationTtl: FB_HISTORY_TTL,
+    });
+  } catch (e) {
+    console.error('KV save failed', e);
+  }
+}
+
+async function processMessengerEvent(env, psid, userText) {
+  const text = String(userText).slice(0, MAX_MESSAGE_LENGTH);
+  const history = await loadFbHistory(env, psid);
+  // Persist only plain text turns; tool rounds stay inside runClaudeConversation.
+  const working = history.map((m) => ({ role: m.role, content: m.content }));
+  working.push({ role: 'user', content: text });
+
+  let reply;
+  try {
+    reply = await runClaudeConversation(env, working);
+  } catch (e) {
+    console.error('Messenger Claude failed', e);
+    reply = `Sorry, I'm having trouble right now. Please call us on ${env.BUSINESS_PHONE || ''}.`.trim();
+  }
+
+  const { clean, booking } = extractBooking(reply);
+  const outText = clean || reply;
+  if (booking) {
+    try {
+      await sendBookingEmail(env, booking);
+    } catch (e) {
+      console.error('Messenger booking email failed', e);
+    }
+  }
+  await sendMessengerMessage(env, psid, outText);
+
+  const updated = history.concat([
+    { role: 'user', content: text },
+    { role: 'assistant', content: outText },
+  ]);
+  await saveFbHistory(env, psid, updated);
+}
+
+async function handleMessengerWebhook(request, env, ctx) {
+  const rawBody = await request.text();
+  if (rawBody.length > MAX_BODY_BYTES) return new Response('Too large', { status: 413 });
+
+  const ok = await verifyMessengerSignature(rawBody, request.headers.get('x-hub-signature-256'), env.MESSENGER_APP_SECRET);
+  if (!ok) return new Response('Invalid signature', { status: 403 });
+
+  let payload;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch (e) {
+    return new Response('Bad JSON', { status: 400 });
+  }
+  if (payload.object !== 'page') return new Response('Not a page event', { status: 404 });
+
+  const jobs = [];
+  for (const entry of payload.entry || []) {
+    for (const event of entry.messaging || []) {
+      const psid = event.sender && event.sender.id;
+      const message = event.message;
+      if (psid && message && message.text && !message.is_echo) {
+        jobs.push(processMessengerEvent(env, psid, message.text));
+      }
+    }
+  }
+  // Acknowledge immediately; keep processing after responding (Meta needs a fast 200).
+  ctx.waitUntil(Promise.all(jobs));
+  return new Response('EVENT_RECEIVED', { status: 200 });
+}
+
+// ---------------------------------------------------------------------------
 // Router.
 // ---------------------------------------------------------------------------
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+
+    // Messenger webhook is server-to-server (no Origin) — handle before CORS gate.
+    if (url.pathname === '/messenger') {
+      if (request.method === 'GET') return handleMessengerVerify(request, env);
+      if (request.method === 'POST') return handleMessengerWebhook(request, env, ctx);
+      return new Response('Method not allowed', { status: 405 });
+    }
+
     const origin = request.headers.get('Origin');
 
     if (request.method === 'OPTIONS') {
@@ -673,7 +841,6 @@ export default {
       return textResponse('CORS origin denied.', 403, origin);
     }
 
-    const url = new URL(request.url);
     if (request.method === 'POST' && url.pathname === '/chat') {
       return handleChat(request, env, origin);
     }
