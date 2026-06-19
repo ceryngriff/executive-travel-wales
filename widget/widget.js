@@ -208,7 +208,7 @@
     return {
       active: false, step: null, awaitingConfirm: false, awaitingFlight: false, quote: null,
       serviceType: '', dateTime: '', pickupLocation: '', destination: '',
-      vehicleClass: '', passengers: '', returnTrip: '', flightNumber: '', name: '', contact: '', notes: '',
+      vehicleClass: '', passengers: '', returnTrip: '', flightNumber: '', name: '', phone: '', email: '', notes: '',
     };
   }
 
@@ -308,7 +308,7 @@
   ];
   var CONTACT_STEPS = [
     { key: 'name', q: 'Lovely. May I take your name?' },
-    { key: 'contact', q: 'And the best email address or phone number to reach you on?' },
+    { key: 'phone', q: 'And the best UK mobile number to text you on about your booking?' },
     { key: 'notes', q: 'Any extra notes for the team? (or say "none")' },
   ];
 
@@ -344,7 +344,7 @@
     ];
     if (b.flightNumber) lines.push('Flight no: ' + b.flightNumber);
     lines.push('Name: ' + b.name);
-    lines.push('Contact: ' + b.contact);
+    lines.push('Mobile: ' + b.phone);
     lines.push('Notes: ' + (b.notes || 'None'));
     if (b.quote && b.quote.quotable) lines.push('Estimate: £' + b.quote.price + ' (confirmed at booking)');
     lines.push('');
@@ -419,10 +419,10 @@
 
     // Contact steps
     var cs = CONTACT_STEPS[b.contactStep];
-    if (cs.key === 'contact') {
-      var v = validateContact(text);
-      if (!v) { pushMessage(app, 'assistant', 'Please share a valid email address or phone number.'); return; }
-      b.contact = v;
+    if (cs.key === 'phone') {
+      var phone = (text.match(/\+?\d[\d ()+-]{7,}\d/) || [])[0];
+      if (!phone) { pushMessage(app, 'assistant', 'Please share a valid UK mobile number so we can text you.'); return; }
+      b.phone = phone.trim();
     } else if (cs.key === 'notes') {
       b.notes = /\b(no|none|n\/a|nope)\b/i.test(text) ? '' : text.trim();
     } else {

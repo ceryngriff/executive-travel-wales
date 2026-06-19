@@ -329,11 +329,11 @@ PRICING. Use the get_quote tool, never your own guess.
 - The visitor can change details (e.g. vehicle class) and you re-quote.
 
 BOOKING
-- After a quote, offer to take the booking. Collect, one question at a time, confirming as you go: service type; date & time; pickup; destination; passengers (plus luggage / child seats if relevant); return or one-way; IF it is a return trip, also ask for the customer's return flight number so we can track the inbound flight for the pickup; name; contact email and/or phone; any notes.
+- After a quote, offer to take the booking. Collect, one question at a time, confirming as you go: service type; date & time; pickup; destination; passengers (plus luggage / child seats if relevant); return or one-way; IF it is a return trip, also ask for the customer's return flight number so we can track the inbound flight for the pickup; name; a UK mobile number (REQUIRED, so the team can text booking updates); optionally an email address; any notes.
 - When you have everything, show a short summary INCLUDING the quoted estimate, mention that a £25 deposit is required to secure the booking, and ask the visitor to confirm.
 - ONLY when the visitor confirms, end your message with a single booking block on its own line, exactly in this format (the website reads it and emails the team; the visitor does not see the raw block):
-[[BOOKING]]{"serviceType":"...","dateTime":"...","pickupLocation":"...","destination":"...","vehicleClass":"...","passengers":"...","returnTrip":"...","flightNumber":"...","name":"...","contact":"...","notes":"...","quote":{"price":0,"currency":"GBP","estimate":true,"quotable":true}}[[/BOOKING]]
-  Use the real collected values. If a field is unknown use an empty string (leave flightNumber empty for one-way trips). If no quote was produced, set "quote" to null. Put a warm, friendly confirmation message BEFORE the block that tells the visitor a member of the Executive Travel Wales team will check availability and get back to them shortly, that a £25 deposit is required to secure the booking, and gives the phone number for anything urgent (e.g. "Brilliant, thank you so much! 😊 A member of our Executive Travel Wales team will check availability and get back to you very soon. Please note a £25 deposit is required to secure your booking. If you need anything in the meantime, just give us a call on ${f.PHONE}."). Do not output the block until the visitor has confirmed.`;
+[[BOOKING]]{"serviceType":"...","dateTime":"...","pickupLocation":"...","destination":"...","vehicleClass":"...","passengers":"...","returnTrip":"...","flightNumber":"...","name":"...","phone":"...","email":"...","notes":"...","quote":{"price":0,"currency":"GBP","estimate":true,"quotable":true}}[[/BOOKING]]
+  Use the real collected values. "phone" must be the customer's mobile number and is required. If a field is unknown use an empty string (leave flightNumber empty for one-way trips, and email empty if not given). If no quote was produced, set "quote" to null. Put a warm, friendly confirmation message BEFORE the block that tells the visitor a member of the Executive Travel Wales team will check availability and get back to them shortly, that a £25 deposit is required to secure the booking, and gives the phone number for anything urgent (e.g. "Brilliant, thank you so much! 😊 A member of our Executive Travel Wales team will check availability and get back to you very soon. Please note a £25 deposit is required to secure your booking. If you need anything in the meantime, just give us a call on ${f.PHONE}."). Do not output the block until the visitor has confirmed.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -533,6 +533,10 @@ function limitString(value) {
 
 function validateBooking(body) {
   if (typeof body !== 'object' || body === null) return 'Invalid booking payload.';
+  // Accept a legacy "contact" field as the phone if no phone was supplied.
+  if (!body.phone && typeof body.contact === 'string' && body.contact.trim()) {
+    body.phone = body.contact.trim();
+  }
   const required = [
     'serviceType',
     'dateTime',
@@ -540,7 +544,7 @@ function validateBooking(body) {
     'destination',
     'passengers',
     'name',
-    'contact',
+    'phone',
   ];
   for (const field of required) {
     const value = body[field];
@@ -569,6 +573,14 @@ function formatQuoteLine(quote) {
   return 'Not quoted.';
 }
 
+// Reply-to must be a valid email; fall back to a legacy contact only if it is one.
+function bookingReplyTo(booking) {
+  const email = limitString(booking.email);
+  if (email) return email;
+  const contact = limitString(booking.contact);
+  return /@/.test(contact) ? contact : '';
+}
+
 function formatBookingEmail(booking) {
   return [
     'New booking / quote request from the Executive Travel Wales website:',
@@ -582,7 +594,8 @@ function formatBookingEmail(booking) {
     `Return trip:    ${limitString(booking.returnTrip) || 'No'}`,
     `Flight number:  ${limitString(booking.flightNumber) || 'N/A'}`,
     `Name:           ${limitString(booking.name)}`,
-    `Contact:        ${limitString(booking.contact)}`,
+    `Mobile:         ${limitString(booking.phone) || limitString(booking.contact)}`,
+    `Email:          ${limitString(booking.email) || 'Not given'}`,
     `Notes:          ${limitString(booking.notes) || 'None'}`,
     `Quoted price:   ${formatQuoteLine(booking.quote)}`,
     '',
@@ -608,7 +621,7 @@ async function sendBookingEmail(env, booking) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${env.RESEND_API_KEY}`,
       },
-      body: JSON.stringify({ from, to: [to], reply_to: limitString(booking.contact) || undefined, subject, text }),
+      body: JSON.stringify({ from, to: [to], reply_to: bookingReplyTo(booking) || undefined, subject, text }),
     });
     if (!response.ok) {
       throw new Error(`Resend failed: ${response.status} ${await response.text()}`);
@@ -636,6 +649,44 @@ async function sendBookingEmail(env, booking) {
   throw new Error(`Unsupported email provider: ${provider}`);
 }
 
+// POST the booking into the Evans Taxi app as a pending job (the office confirms
+// it there, which texts the customer). Best-effort; returns a result object.
+async function sendBookingToApp(env, booking) {
+  if (!env.TAXI_INTAKE_URL || !env.INTAKE_API_KEY) {
+    return { ok: false, skipped: true };
+  }
+  try {
+    const res = await fetch(env.TAXI_INTAKE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': env.INTAKE_API_KEY },
+      body: JSON.stringify(booking),
+    });
+    if (!res.ok) {
+      console.error('Taxi app intake failed', res.status, await res.text());
+      return { ok: false, status: res.status };
+    }
+    return { ok: true };
+  } catch (error) {
+    console.error('Taxi app intake error', error);
+    return { ok: false, error: String(error) };
+  }
+}
+
+// Deliver a confirmed booking to the taxi app AND email it to the office.
+// Best-effort: succeeds if either channel works.
+async function deliverBooking(env, booking) {
+  const app = await sendBookingToApp(env, booking);
+  let email = { ok: false, skipped: true };
+  try {
+    await sendBookingEmail(env, booking);
+    email = { ok: true };
+  } catch (error) {
+    console.error('Booking email failed', error);
+    email = { ok: false, error: String(error) };
+  }
+  return { ok: app.ok || email.ok, app, email };
+}
+
 async function handleBooking(request, env, origin) {
   if (!enforceRateLimit(request)) {
     return jsonResponse({ error: 'Rate limit exceeded. Please wait a moment.' }, 429, origin);
@@ -654,13 +705,11 @@ async function handleBooking(request, env, origin) {
     return jsonResponse({ error: validationError }, 400, origin);
   }
 
-  try {
-    await sendBookingEmail(env, body);
-    return jsonResponse({ ok: true }, 200, origin);
-  } catch (error) {
-    console.error('Booking email failed', error);
-    return jsonResponse({ error: 'Could not submit your booking right now.' }, 500, origin);
+  const result = await deliverBooking(env, body);
+  if (!result.ok) {
+    return jsonResponse({ error: 'Could not submit your booking right now.' }, 502, origin);
   }
+  return jsonResponse({ ok: true }, 200, origin);
 }
 
 // ---------------------------------------------------------------------------
@@ -810,11 +859,7 @@ async function processMessengerEvent(env, pageId, psid, userText) {
   const { clean, booking } = extractBooking(reply);
   const outText = clean || reply;
   if (booking) {
-    try {
-      await sendBookingEmail(env, booking);
-    } catch (e) {
-      console.error('Messenger booking email failed', e);
-    }
+    await deliverBooking(env, booking);
   }
   const sendResult = await sendMessengerMessage(env, pageId, psid, outText);
   await putMessengerDebug(env, {
