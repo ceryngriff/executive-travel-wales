@@ -347,6 +347,8 @@
     lines.push('Contact: ' + b.contact);
     lines.push('Notes: ' + (b.notes || 'None'));
     if (b.quote && b.quote.quotable) lines.push('Estimate: £' + b.quote.price + ' (confirmed at booking)');
+    lines.push('');
+    lines.push('A £25 deposit is required to secure your booking.');
     pushMessage(app, 'assistant', lines.join('\n'));
   }
 
@@ -367,7 +369,7 @@
     if (b.awaitingConfirm) {
       if (/\b(yes|y|confirm|correct|go ahead|send|please do)\b/i.test(text)) {
         b.active = false; b.awaitingConfirm = false;
-        pushMessage(app, 'assistant', 'Thank you, that’s all we need. The team will be in touch shortly to confirm. For anything urgent, call ' + PHONE_PLACEHOLDER + '.');
+        pushMessage(app, 'assistant', 'Brilliant, thank you so much! 😊 A member of our Executive Travel Wales team will check availability and get back to you very soon. Please note a £25 deposit is required to secure your booking. If you need anything in the meantime, just give us a call on ' + PHONE_PLACEHOLDER + '.');
         pushNotice(app, 'Demo mode: no booking email was sent.');
         saveSession(app.state);
         return;
