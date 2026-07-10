@@ -13,7 +13,7 @@ id = "3eac5d8ac4154d099ebc1c42bf55a58a"
 # MESSENGER_PAGE_TOKEN, MESSENGER_APP_SECRET) are set with
 # `wrangler secret put NAME`, or in worker/.dev.vars for `wrangler dev`. See README.
 [vars]
-ALLOWED_ORIGINS = "https://executivetravel.wales,https://www.executivetravel.wales"
+ALLOWED_ORIGINS = "https://executivetravel.wales,https://www.executivetravel.wales,https://evans-taxis.co.uk,https://www.evans-taxis.co.uk"
 EMAIL_PROVIDER = "resend"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 # Evans Taxi app booking intake (the INTAKE_API_KEY secret authenticates to it).
